@@ -39,7 +39,7 @@ jobs:
       run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:ReleaseDirectory=..\$env:RELEASE_DIR /p:TargetName=${{ env.BEXE_NAME }} ${{env.SOLUTION_FILE_PATH}}
 
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: ${{ env.EXE_NAME }}
         path: x64\${{ env.RELEASE_DIR }}\${{ env.EXE_NAME }}

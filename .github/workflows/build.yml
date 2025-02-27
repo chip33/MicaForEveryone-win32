@@ -5,7 +5,6 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Allow manual runs
 
 permissions:
   contents: read
@@ -25,18 +24,18 @@ jobs:
       ARCH: ${{ matrix.platform }}
 
     steps:
-    - name: Checkout repository
+    - name: Checkout Repository
       uses: actions/checkout@v3
 
-    - name: Set up MSBuild
+    - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Build project
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }} /p:TargetName=${{ env.BEXE_NAME }} ${{env.SOLUTION_FILE_PATH}}
+    - name: Build
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:ReleaseDirectory=..\$env:RELEASE_DIR /p:TargetName=${{ env.BEXE_NAME }} ${{ env.SOLUTION_FILE_PATH }}
 
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.EXE_NAME }}
-        path: ${{ matrix.platform }}\${{ env.RELEASE_DIR }}\MicaForEveryone.exe
+        path: ${{ matrix.platform }}\${{ env.RELEASE_DIR }}\${{ env.BEXE_NAME }}.exe

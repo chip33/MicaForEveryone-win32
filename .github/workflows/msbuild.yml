@@ -58,6 +58,7 @@ jobs:
                 /p:Platform=x64 `
                 /p:PlatformToolset=v142 `
                 /p:OutputPath=${{ env.OUTPUT_DIR }} `
+                /p:AdditionalIncludeDirectories="C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\atlmfc\include" `
                 "${{ env.SOLUTION_FILE_PATH }}"
 
     - name: Upload Build Artifact

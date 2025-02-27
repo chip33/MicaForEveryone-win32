@@ -29,7 +29,7 @@ jobs:
       shell: pwsh
       run: Get-ChildItem -Recurse -File
 
-    - name: Install Visual Studio 2019 Build Tools
+    - name: Install Visual Studio 2019 Build Tools with ATL
       shell: pwsh
       run: |
         # Install Visual Studio 2019 Build Tools with v142 toolset, ATL, and Windows SDK

@@ -23,6 +23,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        path: MicaForEveryone  # Explicitly set the checkout path
 
     - name: Debug - List repository files
       shell: pwsh
@@ -51,7 +53,7 @@ jobs:
         Write-Output "ATL headers found at $($atlHeaderPath.FullName)"
 
     - name: Build (x64)
-      working-directory: ${{ github.workspace }}
+      working-directory: ${{ github.workspace }}\MicaForEveryone  # Set working directory to the correct path
       run: |
         msbuild /m `
                 /p:Configuration=${{ matrix.configuration }} `
@@ -66,5 +68,3 @@ jobs:
       with:
         name: ${{ env.EXE_NAME }}
         path: ${{ env.OUTPUT_DIR }}\${{ env.EXE_NAME }}
-
-

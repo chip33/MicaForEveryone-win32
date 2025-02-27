@@ -24,11 +24,11 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
-      working-directory: ${{ github.workspace }}/src  # Set working directory to src folder
+      working-directory: ${{ github.workspace }}\src  # Use backslashes for Windows paths
       run: msbuild /t:Restore "MicaForEveryone.sln"
 
     - name: Build solution (x64)
-      working-directory: ${{ github.workspace }}/src  # Set working directory to src folder
+      working-directory: ${{ github.workspace }}\src  # Use backslashes for Windows paths
       run: |
         msbuild /m `
                 /p:Configuration=${{ matrix.configuration }} `

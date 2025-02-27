@@ -1,35 +1,67 @@
-name: Build and Test
+name: MicaForEveryone
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    strategy:
+      matrix:
+        configuration: [Release]
     runs-on: windows-latest
+    env:
+      SOLUTION_FILE_PATH: MicaForEveryone.sln  # Solution file in the root of the repo
+      OUTPUT_DIR: bin\x64\${{ matrix.configuration }}
+      EXE_NAME: MicaForEveryone.exe
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Install Chocolatey
-        win_shell: |
-          Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+    - name: Debug - List repository files
+      shell: pwsh
+      run: Get-ChildItem -Recurse -File
 
-      - name: Install Visual Studio Build Tools
-        run: |
-          choco install visualstudio2019buildtools --version 16.10.0 --package-parameters "--add Microsoft.VisualStudio.Workload.MSBuildTools --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+    - name: Install Visual Studio 2019 Build Tools with ATL
+      shell: pwsh
+      run: |
+        choco install visualstudio2019buildtools --package-parameters ``
+          "--add Microsoft.VisualStudio.Component.VC.v142.x86.x64 ``
+          --add Microsoft.VisualStudio.Component.VC.ATL ``
+          --add Microsoft.VisualStudio.Component.Windows10SDK" --yes --no-progress
 
-      - name: Build Project
-        run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
-          msbuild MicaForEveryone.vcxproj /p:Configuration=Release /p:Platform=x64
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2  # Keeping v1.0.2 for compatibility
 
-      - name: Run Tests
-        run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
-          # Replace with your test command
-          # Example: .\path\to\your\test\executable.exe
+    - name: Verify ATL Headers
+      shell: pwsh
+      run: |
+        $atlIncludePath = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\include"
+        if (-Not (Test-Path $atlIncludePath)) {
+          Write-Error "ATL include path not found at $atlIncludePath"
+          exit 1
+        }
+        Write-Output "ATL include path found at $atlIncludePath"
+
+    - name: Build (x64)
+      working-directory: ${{ github.workspace }}
+      run: |
+        msbuild /m ``
+                /p:Configuration=${{ matrix.configuration }} ``
+                /p:Platform=x64 ``
+                /p:PlatformToolset=v142 ``
+                /p:OutputPath=${{ env.OUTPUT_DIR }} ``
+                "${{ env.SOLUTION_FILE_PATH }}"
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.EXE_NAME }}
+        path: ${{ env.OUTPUT_DIR }}\${{ env.EXE_NAME }}
+

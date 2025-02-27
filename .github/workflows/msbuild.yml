@@ -31,9 +31,9 @@ jobs:
     - name: Install Visual Studio 2019 Build Tools with ATL
       shell: pwsh
       run: |
-        choco install visualstudio2019buildtools --package-parameters ``
-          "--add Microsoft.VisualStudio.Component.VC.v142.x86.x64 ``
-          --add Microsoft.VisualStudio.Component.VC.ATL ``
+        choco install visualstudio2019buildtools --package-parameters `
+          "--add Microsoft.VisualStudio.Component.VC.v142.x86.x64 ` 
+          --add Microsoft.VisualStudio.Component.VC.ATL ` 
           --add Microsoft.VisualStudio.Component.Windows10SDK" --yes --no-progress
 
     - name: Add MSBuild to PATH
@@ -42,21 +42,21 @@ jobs:
     - name: Verify ATL Headers
       shell: pwsh
       run: |
-        $atlIncludePath = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\include"
-        if (-Not (Test-Path $atlIncludePath)) {
-          Write-Error "ATL include path not found at $atlIncludePath"
+        $atlPath = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\include\atlstr.h"
+        if (-Not (Test-Path $atlPath)) {
+          Write-Error "ATL headers not found at $atlPath"
           exit 1
         }
-        Write-Output "ATL include path found at $atlIncludePath"
+        Write-Output "ATL headers found at $atlPath"
 
     - name: Build (x64)
       working-directory: ${{ github.workspace }}
       run: |
-        msbuild /m ``
-                /p:Configuration=${{ matrix.configuration }} ``
-                /p:Platform=x64 ``
-                /p:PlatformToolset=v142 ``
-                /p:OutputPath=${{ env.OUTPUT_DIR }} ``
+        msbuild /m `
+                /p:Configuration=${{ matrix.configuration }} `
+                /p:Platform=x64 `
+                /p:PlatformToolset=v142 `
+                /p:OutputPath=${{ env.OUTPUT_DIR }} `
                 "${{ env.SOLUTION_FILE_PATH }}"
 
     - name: Upload Build Artifact
@@ -64,4 +64,5 @@ jobs:
       with:
         name: ${{ env.EXE_NAME }}
         path: ${{ env.OUTPUT_DIR }}\${{ env.EXE_NAME }}
+
 

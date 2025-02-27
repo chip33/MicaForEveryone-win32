@@ -16,7 +16,7 @@ jobs:
         configuration: [Release]
     runs-on: windows-latest
     env:
-      SOLUTION_FILE_PATH: MicaForEveryone.sln  # Correct path to the solution file (root of the repo)
+      SOLUTION_FILE_PATH: MicaForEveryone.sln
       RELEASE_DIR: ${{ matrix.configuration }}
       EXE_NAME: MicaForEveryone-x64-${{ matrix.configuration }}.exe
       BEXE_NAME: MicaForEveryone-x64-${{ matrix.configuration }}
@@ -32,8 +32,12 @@ jobs:
     - name: Install Visual Studio 2019 Build Tools with ATL
       shell: pwsh
       run: |
-        # Install Visual Studio 2019 Build Tools with v142 toolset, ATL, and Windows SDK
         choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.v142.x86.x64 --add Microsoft.VisualStudio.Component.VC.ATL --add Microsoft.VisualStudio.Component.Windows10SDK" --yes --no-progress
+
+    - name: Verify Installed Components
+      shell: pwsh
+      run: |
+        & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -products * -requires Microsoft.Component.MSBuild -property installationPath
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
@@ -49,13 +53,13 @@ jobs:
         Write-Output "ATL headers found at $atlPath"
 
     - name: Build (x64)
-      working-directory: ${{ github.workspace }}  # Set working directory to repo root
+      working-directory: ${{ github.workspace }}
       run: |
-        msbuild /m `
-                /p:Configuration=${{ matrix.configuration }} `
-                /p:Platform=x64 `
-                /p:PlatformToolset=v142 `
-                /p:OutputPath=bin\x64\${{ matrix.configuration }} `
+        msbuild /m ` 
+                /p:Configuration=${{ matrix.configuration }} ` 
+                /p:Platform=x64 ` 
+                /p:PlatformToolset=v142 ` 
+                /p:OutputPath=bin\x64\${{ matrix.configuration }} ` 
                 "${{ env.SOLUTION_FILE_PATH }}"
 
     - name: Upload a Build Artifact
@@ -63,3 +67,4 @@ jobs:
       with:
         name: ${{ env.EXE_NAME }}
         path: bin\x64\${{ matrix.configuration }}\${{ env.EXE_NAME }}
+

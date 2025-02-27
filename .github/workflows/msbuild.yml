@@ -38,6 +38,16 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
+    - name: Verify ATL Headers
+      shell: pwsh
+      run: |
+        $atlPath = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\include\atlstr.h"
+        if (-Not (Test-Path $atlPath)) {
+          Write-Error "ATL headers not found at $atlPath"
+          exit 1
+        }
+        Write-Output "ATL headers found at $atlPath"
+
     - name: Build (x64)
       working-directory: ${{ github.workspace }}  # Set working directory to repo root
       run: |

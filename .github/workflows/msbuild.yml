@@ -15,27 +15,34 @@ jobs:
       matrix:
         configuration: [Release]
     runs-on: windows-latest
-    env:
-      SOLUTION_FILE_PATH: src/MicaForEveryone.sln  # Correct path to the solution file
-      VERSION: 2.0.2  # Update this with your actual version
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Extract version from AssemblyInfo.cs
+      id: extract_version
+      shell: pwsh
+      run: |
+        $version = (Select-String -Path "src/Properties/AssemblyInfo.cs" -Pattern 'AssemblyVersion\("([0-9]+\.[0-9]+\.[0-9]+)' | % { $_.Matches.Groups[1].Value })
+        echo "VERSION=$version" >> $env:GITHUB_ENV
+        echo "Extracted version: $version"
+
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
-      run: msbuild /t:Restore "${{ env.SOLUTION_FILE_PATH }}"
+      working-directory: ${{ github.workspace }}  # Set working directory to repo root
+      run: msbuild /t:Restore "src/MicaForEveryone.sln"
 
     - name: Build solution (x64)
+      working-directory: ${{ github.workspace }}  # Set working directory to repo root
       run: |
         msbuild /m `
                 /p:Configuration=${{ matrix.configuration }} `
                 /p:Platform="x64" `
                 /p:OutputPath="bin\x64\${{ matrix.configuration }}" `
-                "${{ env.SOLUTION_FILE_PATH }}"
+                "src/MicaForEveryone.sln"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

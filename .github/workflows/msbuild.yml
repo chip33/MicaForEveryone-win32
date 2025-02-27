@@ -1,10 +1,10 @@
-name: MicaForEveryone
+name: Build MicaForEveryone
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -14,32 +14,30 @@ jobs:
     strategy:
       matrix:
         configuration: [Release]
-        platform: [x64, x86]
     runs-on: windows-latest
     env:
-      SOLUTION_FILE_PATH: .
-      RELEASE_DIR: ${{ matrix.configuration }}
-      EXE_NAME: MicaForEveryone-${{ matrix.platform }}-${{ matrix.configuration }}.exe
-      BEXE_NAME: MicaForEveryone-${{ matrix.platform }}-${{ matrix.configuration }}
-      ARCH: ${{ matrix.platform }}
+      SOLUTION_FILE_PATH: MicaForEveryone.sln
+      VERSION: 2.0.2  # Update this with your actual version
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Set up Visual Studio Build Tools
-      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
 
-    - name: Install Visual C++ Build Tools
+    - name: Restore NuGet packages
+      run: msbuild /t:Restore "${{ env.SOLUTION_FILE_PATH }}"
+
+    - name: Build solution (x64)
       run: |
-        choco install visualstudio2019buildtools --version=16.9.4 --params="'/install /quiet /norestart /features 'Web' /norestart'"
-        choco install vcredist2019
+        msbuild /m /p:Configuration=${{ matrix.configuration }} \
+                /p:Platform=x64 \
+                /p:OutputPath=bin\x64\${{ matrix.configuration }} \
+                "${{ env.SOLUTION_FILE_PATH }}"
 
-    - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:ReleaseDirectory=..\$env:RELEASE_DIR /p:TargetName=${{ env.BEXE_NAME }} ${{env.SOLUTION_FILE_PATH}}
-
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.EXE_NAME }}
-        path: x64\${{ env.RELEASE_DIR }}\${{ env.EXE_NAME }}
+        name: MicaForEveryone-${{ env.VERSION }}-x64-${{ matrix.configuration }}
+        path: bin/x64/${{ matrix.configuration }}/MicaForEveryone.exe

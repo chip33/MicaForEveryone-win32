@@ -11,28 +11,33 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-2019  # Matches the original workflow's environment
+    strategy:
+      matrix:
+        configuration: [Release]
+    runs-on: windows-latest
     env:
-      SOLUTION_FILE_PATH: MicaForEveryone.sln
-      CONFIGURATION: Release
-      PLATFORM: x64
-      OUTPUT_DIR: bin\x64\Release
-      EXE_NAME: MicaForEveryone-x64-Release.exe
+      SOLUTION_FILE_PATH: MicaForEveryone.sln  # Solution file in the root of the repo
+      OUTPUT_DIR: bin\x64\${{ matrix.configuration }}
+      EXE_NAME: MicaForEveryone.exe
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Debug - List repository files
+      shell: pwsh
+      run: Get-ChildItem -Recurse -File
 
-    - name: Install Dependencies (v142 Toolset & SDK)
+    - name: Install Visual Studio 2019 Build Tools with ATL
       shell: pwsh
       run: |
         choco install visualstudio2019buildtools --package-parameters `
           "--add Microsoft.VisualStudio.Component.VC.v142.x86.x64 `
-          --add Microsoft.VisualStudio.Component.Windows10SDK `
-          --add Microsoft.VisualStudio.Component.VC.ATL" -y --no-progress
+          --add Microsoft.VisualStudio.Component.VC.ATL `
+          --add Microsoft.VisualStudio.Component.Windows10SDK" --yes --no-progress
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2  # Keeping v1.0.2 for compatibility
 
     - name: Verify ATL Headers
       shell: pwsh
@@ -44,19 +49,18 @@ jobs:
         }
         Write-Output "ATL headers found at $atlPath"
 
-    - name: Build Solution
+    - name: Build (x64)
+      working-directory: ${{ github.workspace }}
       run: |
-        msbuild ${{ env.SOLUTION_FILE_PATH }} /m ^
-          /p:Configuration=${{ env.CONFIGURATION }} ^
-          /p:Platform=${{ env.PLATFORM }} ^
-          /p:PlatformToolset=v142 ^
-          /p:OutputPath=${{ env.OUTPUT_DIR }}
+        msbuild /m `
+                /p:Configuration=${{ matrix.configuration }} `
+                /p:Platform=x64 `
+                /p:PlatformToolset=v142 `
+                /p:OutputPath=${{ env.OUTPUT_DIR }} `
+                "${{ env.SOLUTION_FILE_PATH }}"
 
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.EXE_NAME }}
-        path: ${{ env.OUTPUT_DIR }}\MicaForEveryone.exe
-
-
-
+        path: ${{ env.OUTPUT_DIR }}\${{ env.EXE_NAME }}

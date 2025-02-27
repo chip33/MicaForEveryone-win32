@@ -33,21 +33,22 @@ jobs:
       run: |
         choco install visualstudio2019buildtools --package-parameters `
           "--add Microsoft.VisualStudio.Component.VC.v142.x86.x64 ` 
-          --add Microsoft.VisualStudio.Component.VC.ATL ` 
-          --add Microsoft.VisualStudio.Component.Windows10SDK" --yes --no-progress
+           --add Microsoft.VisualStudio.Component.VC.ATL ` 
+           --add Microsoft.VisualStudio.Component.Windows10SDK" --yes --no-progress
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2  # Keeping v1.0.2 for compatibility
 
-    - name: Verify ATL Headers
+    - name: Verify ATL Installation
       shell: pwsh
       run: |
-        $atlPath = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\include\atlstr.h"
-        if (-Not (Test-Path $atlPath)) {
-          Write-Error "ATL headers not found at $atlPath"
+        $atlPath = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC"
+        $atlHeaderPath = Get-ChildItem -Path $atlPath -Recurse -Include "atlstr.h" -ErrorAction SilentlyContinue
+        if (-Not $atlHeaderPath) {
+          Write-Error "ATL headers not found"
           exit 1
         }
-        Write-Output "ATL headers found at $atlPath"
+        Write-Output "ATL headers found at $($atlHeaderPath.FullName)"
 
     - name: Build (x64)
       working-directory: ${{ github.workspace }}

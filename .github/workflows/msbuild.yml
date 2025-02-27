@@ -1,4 +1,4 @@
-name: Build MicaForEveryone
+name: MicaForEveryone
 
 on:
   push:
@@ -15,29 +15,34 @@ jobs:
       matrix:
         configuration: [Release]
     runs-on: windows-latest
+    env:
+      SOLUTION_FILE_PATH: src/MicaForEveryone.sln  # Explicit path to the solution file
+      RELEASE_DIR: ${{ matrix.configuration }}
+      EXE_NAME: MicaForEveryone-x64-${{ matrix.configuration }}.exe
+      BEXE_NAME: MicaForEveryone-x64-${{ matrix.configuration }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup MSBuild
+    - name: Debug - List repository files
+      shell: pwsh
+      run: Get-ChildItem -Recurse -File
+
+    - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
-    - name: Restore NuGet packages
-      working-directory: ${{ github.workspace }}\src  # Use backslashes for Windows paths
-      run: msbuild /t:Restore "MicaForEveryone.sln"
-
-    - name: Build solution (x64)
-      working-directory: ${{ github.workspace }}\src  # Use backslashes for Windows paths
+    - name: Build (x64)
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: |
         msbuild /m `
                 /p:Configuration=${{ matrix.configuration }} `
-                /p:Platform="x64" `
-                /p:OutputPath="bin\x64\${{ matrix.configuration }}" `
-                "MicaForEveryone.sln"
+                /p:Platform=x64 `
+                /p:OutputPath=bin\x64\${{ matrix.configuration }} `
+                ${{ env.SOLUTION_FILE_PATH }}
 
-    - name: Upload artifact
+    - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: MicaForEveryone-x64-${{ matrix.configuration }}
-        path: src/bin/x64/${{ matrix.configuration }}/MicaForEveryone.exe
+        name: ${{ env.EXE_NAME }}
+        path: bin\x64\${{ matrix.configuration }}\${{ env.EXE_NAME }}

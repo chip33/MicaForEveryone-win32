@@ -39,6 +39,12 @@ jobs:
       run: |
         & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -products * -requires Microsoft.Component.MSBuild -property installationPath
 
+    - name: Check Installed Include Files
+      shell: pwsh
+      run: |
+        $includePath = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC"
+        Get-ChildItem -Recurse -Path $includePath -Include "atlstr.h", "atl*"
+
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
@@ -67,4 +73,5 @@ jobs:
       with:
         name: ${{ env.EXE_NAME }}
         path: bin\x64\${{ matrix.configuration }}\${{ env.EXE_NAME }}
+
 

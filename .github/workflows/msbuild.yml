@@ -26,18 +26,20 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Add MSBuild to PATH
+    - name: Set up Visual Studio Build Tools
       uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Install Visual C++ Build Tools
+      run: |
+        choco install visualstudio2019buildtools --version=16.9.4 --params="'/install /quiet /norestart /features 'Web' /norestart'"
+        choco install vcredist2019
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:ReleaseDirectory=..\$env:RELEASE_DIR /p:TargetName=${{ env.BEXE_NAME }} ${{env.SOLUTION_FILE_PATH}}
+
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3.0.0
+      uses: actions/upload-artifact@v3
       with:
-      # Artifact name
-        name:  ${{ env.EXE_NAME }}
-      # A file, directory or wildcard pattern that describes what to upload (ik its shit.)
+        name: ${{ env.EXE_NAME }}
         path: x64\${{ env.RELEASE_DIR }}\${{ env.EXE_NAME }}

@@ -16,7 +16,7 @@ jobs:
         configuration: [Release]
     runs-on: windows-latest
     env:
-      SOLUTION_FILE_PATH: MicaForEveryone.sln
+      SOLUTION_FILE_PATH: src/MicaForEveryone.sln  # Correct path to the solution file
       VERSION: 2.0.2  # Update this with your actual version
 
     steps:
@@ -24,20 +24,21 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1
+      uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
       run: msbuild /t:Restore "${{ env.SOLUTION_FILE_PATH }}"
 
     - name: Build solution (x64)
       run: |
-        msbuild /m /p:Configuration=${{ matrix.configuration }} \
-                /p:Platform=x64 \
-                /p:OutputPath=bin\x64\${{ matrix.configuration }} \
+        msbuild /m `
+                /p:Configuration=${{ matrix.configuration }} `
+                /p:Platform="x64" `
+                /p:OutputPath="bin\x64\${{ matrix.configuration }}" `
                 "${{ env.SOLUTION_FILE_PATH }}"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: MicaForEveryone-${{ env.VERSION }}-x64-${{ matrix.configuration }}
-        path: bin/x64/${{ matrix.configuration }}/MicaForEveryone.exe
+        path: src/bin/x64/${{ matrix.configuration }}/MicaForEveryone.exe

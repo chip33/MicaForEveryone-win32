@@ -29,11 +29,11 @@ jobs:
       shell: pwsh
       run: Get-ChildItem -Recurse -File
 
-    - name: Install Visual Studio Build Tools with ATL
+    - name: Install Visual Studio 2019 Build Tools
       shell: pwsh
       run: |
-        # Install Visual Studio Build Tools with ATL and Windows SDK
-        choco install visualstudio2022-workload-vctools --package-parameters "--add Microsoft.VisualStudio.Component.VC.ATL --add Microsoft.VisualStudio.Component.Windows10SDK" --yes --no-progress
+        # Install Visual Studio 2019 Build Tools with v142 toolset, ATL, and Windows SDK
+        choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.v142.x86.x64 --add Microsoft.VisualStudio.Component.VC.ATL --add Microsoft.VisualStudio.Component.Windows10SDK" --yes --no-progress
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
@@ -44,6 +44,7 @@ jobs:
         msbuild /m `
                 /p:Configuration=${{ matrix.configuration }} `
                 /p:Platform=x64 `
+                /p:PlatformToolset=v142 `
                 /p:OutputPath=bin\x64\${{ matrix.configuration }} `
                 "${{ env.SOLUTION_FILE_PATH }}"
 

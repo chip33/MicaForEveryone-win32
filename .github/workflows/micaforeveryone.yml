@@ -1,0 +1,41 @@
+name: MicaForEveryone
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Release]
+        platform: [x64, x86]
+    runs-on: windows-latest
+    env:
+      SOLUTION_FILE_PATH: .
+      RELEASE_DIR: ${{ matrix.configuration }}
+      EXE_NAME: MicaForEveryone-${{ matrix.platform }}-${{ matrix.configuration }}.exe
+      BEXE_NAME: MicaForEveryone-${{ matrix.platform }}-${{ matrix.configuration }}
+      ARCH: ${{ matrix.platform }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Build
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:ReleaseDirectory=..\$env:RELEASE_DIR /p:TargetName=${{ env.BEXE_NAME }} ${{ env.SOLUTION_FILE_PATH }}
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.EXE_NAME }}
+        path: ${{ matrix.platform }}\${{ env.RELEASE_DIR }}\${{ env.BEXE_NAME }}.exe

@@ -1,3 +1,4 @@
+
 name: MicaForEveryone
 
 on:
@@ -31,6 +32,12 @@ jobs:
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
+
+    - name: Install Windows SDK and ATL
+      shell: pwsh
+      run: |
+        # Install the required Visual Studio components
+        choco install visualstudio2022-workload-vctools --package-parameters "--add Microsoft.VisualStudio.Component.VC.ATL" --yes --no-progress
 
     - name: Build (x64)
       working-directory: ${{ github.workspace }}  # Set working directory to repo root
